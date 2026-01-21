@@ -5,16 +5,24 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Pedidos de Barritas</title>
 
-  <!-- Cache-busting: cambia el sufijo cada deploy -->
-  <link rel="stylesheet" href="./styles.css?v=20260121-1" />
+  <!-- Cambia el sufijo cuando deployas -->
+  <link rel="stylesheet" href="./styles.css?v=20260121-3" />
 </head>
 <body>
   <main class="wrap">
     <header class="hero">
-      <div class="heroLeft">
-        <h1>Pedidos de Barritas</h1>
-        <div class="badge">Minimo de compra: <strong>$40.000</strong></div>
+      <div class="brand">
+        <div class="logoBox" aria-label="Logo">
+          <!-- Reemplaza por <img src="./logo.png" class="logoImg" alt="Logo" /> cuando tengas -->
+          <div class="logoText">LOGO</div>
+        </div>
+
+        <div class="brandText">
+          <h1>Pedidos de Barritas</h1>
+          <div class="badge" id="minBadge">Minimo de compra: <strong>$0</strong></div>
+        </div>
       </div>
+
       <div class="meta">Recibis confirmacion y coordinamos pago y envio.</div>
     </header>
 
@@ -44,7 +52,6 @@
           <div id="products" class="productsList"></div>
         </section>
 
-        <!-- Entrega: aparece cuando hay productos -->
         <section id="deliverySection" class="card hidden">
           <h2>Entrega</h2>
 
@@ -70,7 +77,6 @@
           </div>
         </section>
 
-        <!-- Pago: aparece cuando hay productos -->
         <section id="paymentSection" class="card hidden">
           <h2>Pago</h2>
 
@@ -88,7 +94,7 @@
           </div>
         </section>
 
-        <!-- Sticky mobile resumen -->
+        <!-- Sticky mobile: UNICO boton en mobile -->
         <div id="mobileSticky" class="mobileSticky hidden">
           <div class="row">
             <div><strong>Total</strong></div>
@@ -116,7 +122,6 @@
 
         <div id="summaryChips" class="chips hidden"></div>
 
-        <!-- Carrito -->
         <div id="cartList" class="cartEmpty">
           Tu carrito esta vacio. Elegi productos para continuar.
         </div>
@@ -124,13 +129,13 @@
         <p id="error" class="error hidden"></p>
         <p id="success" class="success hidden"></p>
 
+        <!-- Este boton se oculta en mobile por CSS -->
         <button id="submitBtn" class="btn" disabled>Confirmar pedido</button>
         <a id="waLink" class="wa hidden" target="_blank" rel="noreferrer">Enviar confirmacion por WhatsApp</a>
       </aside>
     </div>
 
-    <!-- Cache-busting: cambia el sufijo cada deploy -->
-    <script src="./app.js?v=20260121-1"></script>
+    <script src="./app.js?v=20260121-3"></script>
   </main>
 </body>
 </html>
