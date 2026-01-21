@@ -12,6 +12,9 @@
 }
 
 *{ box-sizing:border-box; }
+
+html, body { width:100%; overflow-x:hidden; }
+
 body{
   margin:0;
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
@@ -20,12 +23,13 @@ body{
 }
 
 .wrap{
+  width:100%;
   max-width: 1040px;
   margin: 0 auto;
   padding: 18px;
 }
 
-header.hero{
+.hero{
   display:flex;
   align-items:flex-end;
   justify-content:space-between;
@@ -33,7 +37,40 @@ header.hero{
   margin: 10px 0 18px;
 }
 
-.heroLeft{ display:flex; flex-direction:column; gap:8px; }
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+}
+
+.logoBox{
+  width:52px;
+  height:52px;
+  border-radius: 14px;
+  border:1px solid var(--line);
+  background:#fff;
+  box-shadow: 0 6px 18px rgba(17,24,39,.05);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex: 0 0 auto;
+}
+
+.logoText{
+  font-weight:900;
+  font-size:12px;
+  color: rgba(37,99,235,.85);
+}
+
+.logoImg{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  padding:8px;
+}
+
+.brandText{ min-width:0; }
 
 h1{
   font-size: 30px;
@@ -42,7 +79,7 @@ h1{
   letter-spacing:-0.02em;
 }
 
-.hero .meta{
+.meta{
   text-align:right;
   color: var(--muted);
   font-size: 14px;
@@ -59,6 +96,7 @@ h1{
   background:#fff;
   box-shadow: 0 6px 18px rgba(17,24,39,.05);
   width: fit-content;
+  margin-top:8px;
 }
 
 .layout{
@@ -66,6 +104,7 @@ h1{
   grid-template-columns: 1fr 380px;
   gap: 18px;
   align-items:start;
+  min-width:0;
 }
 
 .card{
@@ -74,6 +113,7 @@ h1{
   border-radius: var(--radius);
   padding: 14px;
   box-shadow: var(--shadow);
+  min-width:0;
 }
 
 .card h2{
@@ -157,6 +197,7 @@ input:focus{
   display:flex;
   flex-direction:column;
   gap:10px;
+  min-width:0;
 }
 
 .productCard{
@@ -167,29 +208,42 @@ input:focus{
   justify-content:space-between;
   gap: 12px;
   background:#fff;
+  min-width:0;
 }
 
 .productLeft{
   display:flex;
   gap:12px;
   align-items:center;
+  min-width:0;
+}
+
+.productImg{
+  width:56px;
+  height:56px;
+  border-radius: 14px;
+  border:1px solid var(--line);
+  object-fit:cover;
+  background: linear-gradient(135deg, rgba(37,99,235,.12), rgba(29,78,216,.06));
+  flex: 0 0 auto;
 }
 
 .thumb{
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width:56px;
+  height:56px;
+  border-radius: 14px;
   border: 1px solid var(--line);
   background: linear-gradient(135deg, rgba(37,99,235,.12), rgba(29,78,216,.06));
   display:flex;
   align-items:center;
   justify-content:center;
-  font-weight:800;
+  font-weight:900;
   color: rgba(37,99,235,.8);
+  flex: 0 0 auto;
 }
 
-.productInfo{ min-width: 220px; }
-.productName{ font-weight:800; margin:0 0 4px; font-size: 15px; }
+.productInfo{ min-width:0; }
+.productName{ font-weight:900; margin:0 0 4px; font-size: 15px; }
 
 .productMeta{
   color: var(--muted);
@@ -197,15 +251,17 @@ input:focus{
   display:flex;
   gap:10px;
   flex-wrap:wrap;
+  min-width:0;
 }
 
-.price{ font-weight:800; color: var(--text); }
+.price{ font-weight:900; color: var(--text); }
 .stockLow{ color:#b45309; }
 
 .stepper{
   display:flex;
   align-items:center;
   gap:10px;
+  flex: 0 0 auto;
 }
 
 .stepper button{
@@ -220,8 +276,9 @@ input:focus{
 
 .qtyBox{
   width: 72px;
+  max-width: 72px;
   text-align:center;
-  font-weight:800;
+  font-weight:900;
 }
 
 .summaryRow{
@@ -287,7 +344,7 @@ input:focus{
 }
 .cartItem strong{
   color: var(--text);
-  font-weight:800;
+  font-weight:900;
 }
 
 .error{ color: var(--danger); margin-top: 10px; font-size: 14px; }
@@ -328,14 +385,28 @@ input:focus{
 
 .hidden{ display:none; }
 
+/* responsive layout */
 @media (max-width: 920px){
   .layout{ grid-template-columns: 1fr; }
   .hero{ align-items:flex-start; flex-direction:column; }
-  .hero .meta{ text-align:left; max-width:none; }
+  .meta{ text-align:left; max-width:none; }
+  /* En mobile, oculto boton del resumen para evitar duplicado */
+  #submitBtn{ display:none; }
 }
 
 @media (max-width: 720px){
   .grid3{ grid-template-columns: 1fr; }
+}
+
+/* product card mobile stacking */
+@media (max-width: 520px){
+  .productCard{
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .stepper{
+    justify-content: flex-end;
+  }
 }
 
 /* Sticky mobile */
