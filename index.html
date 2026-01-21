@@ -1,91 +1,102 @@
-<main class="wrap">
-  <header class="hero">
-    <div>
-      <h1>Pedidos de Barritas</h1>
-      <div class="badge">Minimo de compra: <strong>$40.000</strong></div>
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pedidos de Barritas</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="wrap">
+    <header class="hero">
+      <div>
+        <h1>Pedidos de Barritas</h1>
+        <div class="badge">Minimo de compra: <strong>$40.000</strong></div>
+      </div>
+      <div class="meta">Pago y envio se coordinan luego del pedido.</div>
+    </header>
+
+    <div class="layout">
+      <!-- Columna izquierda -->
+      <div>
+        <section class="card">
+          <h2>Datos del cliente</h2>
+          <div class="grid3">
+            <label>Nombre
+              <input id="customerName" type="text" autocomplete="name" required />
+            </label>
+            <label>Email
+              <input id="customerEmail" type="email" autocomplete="email" required />
+            </label>
+            <label>Telefono
+              <input id="customerPhone" type="tel" inputmode="tel" autocomplete="tel" required />
+            </label>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Entrega</h2>
+          <div class="radioPill">
+            <label class="pill active" id="pillRetiro">
+              <input type="radio" name="deliveryType" value="RETIRO" checked> Retiro
+            </label>
+            <label class="pill" id="pillEnvio">
+              <input type="radio" name="deliveryType" value="ENVIO"> Envio
+            </label>
+          </div>
+
+          <div id="addressBox" class="hidden" style="margin-top:12px">
+            <label>Direccion
+              <input id="address" type="text" autocomplete="street-address" />
+            </label>
+          </div>
+
+          <div style="margin-top:12px">
+            <label>Notas
+              <input id="notes" type="text" />
+            </label>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Productos</h2>
+          <div id="products" class="productsList"></div>
+        </section>
+
+        <!-- Sticky resumen mobile -->
+        <div class="mobileSticky">
+          <div class="row">
+            <div><strong>Total</strong></div>
+            <div id="totalSticky"><strong>$0</strong></div>
+          </div>
+          <button id="submitBtnSticky" class="btn">Confirmar pedido</button>
+          <p id="errorSticky" class="error hidden"></p>
+        </div>
+      </div>
+
+      <!-- Columna derecha -->
+      <aside class="card">
+        <h2>Resumen</h2>
+
+        <div class="summaryRow">
+          <div>Subtotal</div><strong id="subtotal">$0</strong>
+        </div>
+        <div class="summaryRow">
+          <div>Envio</div><strong id="deliveryFee">$0</strong>
+        </div>
+        <div class="summaryTotal">
+          <div>Total</div><div id="total">$0</div>
+        </div>
+
+        <p id="error" class="error hidden"></p>
+        <p id="success" class="success hidden"></p>
+
+        <button id="submitBtn" class="btn">Confirmar pedido</button>
+        <a id="waLink" class="wa hidden" target="_blank" rel="noreferrer">Enviar confirmacion por WhatsApp</a>
+      </aside>
     </div>
-    <div class="meta">Pago y envio se coordinan luego del pedido.</div>
-  </header>
 
-  <div class="layout">
-    <!-- Columna izquierda -->
-    <div>
-      <section class="card">
-        <h2>Datos del cliente</h2>
-        <div class="grid3">
-          <label>Nombre
-            <input id="customerName" type="text" required />
-          </label>
-          <label>Email
-            <input id="customerEmail" type="email" required />
-          </label>
-          <label>Telefono
-            <input id="customerPhone" type="tel" required />
-          </label>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>Entrega</h2>
-        <div class="radioPill">
-          <label class="pill active" id="pillRetiro">
-            <input type="radio" name="deliveryType" value="RETIRO" checked> Retiro
-          </label>
-          <label class="pill" id="pillEnvio">
-            <input type="radio" name="deliveryType" value="ENVIO"> Envio
-          </label>
-        </div>
-
-        <div id="addressBox" class="hidden" style="margin-top:12px">
-          <label>Direccion
-            <input id="address" type="text" />
-          </label>
-        </div>
-
-        <div style="margin-top:12px">
-          <label>Notas
-            <input id="notes" type="text" />
-          </label>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>Productos</h2>
-        <div id="products" class="productsList"></div>
-      </section>
-
-      <!-- Sticky resumen mobile (opcional) -->
-      <div class="mobileSticky">
-        <div class="row">
-          <div><strong>Total</strong></div>
-          <div id="totalSticky"><strong>$0</strong></div>
-        </div>
-        <button id="submitBtnSticky" class="btn">Confirmar pedido</button>
-        <p id="errorSticky" class="error hidden"></p>
-      </div>
-    </div>
-
-    <!-- Columna derecha (resumen) -->
-    <aside class="card">
-      <h2>Resumen</h2>
-
-      <div class="summaryRow">
-        <div>Subtotal</div><strong id="subtotal">$0</strong>
-      </div>
-      <div class="summaryRow">
-        <div>Envio</div><strong id="deliveryFee">$0</strong>
-      </div>
-      <div class="summaryTotal">
-        <div>Total</div><div id="total">$0</div>
-      </div>
-
-      <p id="error" class="error hidden"></p>
-      <p id="success" class="success hidden"></p>
-
-      <button id="submitBtn" class="btn">Confirmar pedido</button>
-      <a id="waLink" class="wa hidden" target="_blank" rel="noreferrer">Enviar confirmacion por WhatsApp</a>
-    </aside>
-  </div>
-
-  <script src="app.js"></script>
-</main>
+    <script src="app.js"></script>
+  </main>
+</body>
+</html>
