@@ -2,32 +2,39 @@ const API_BASE = "https://script.google.com/macros/s/AKfycbxSvyw7GSgfzLvm14aKFZI
 const MIN_TOTAL = 40000;
 const FRONT_DELIVERY_FEE = 0;
 
-// opcional: ponelo en serio para habilitar link
+// opcional: ponelo real para habilitar link
 const YOUR_WHATSAPP_NUMBER = "54911XXXXXXXX";
 
 let products = [];
 
 function money(n){ return "$" + Number(n||0).toLocaleString("es-AR"); }
+
 function getDeliveryType(){
   const el = document.querySelector("input[name='deliveryType']:checked");
   return el ? el.value : "RETIRO";
 }
 
+function getPayMethod(){
+  const el = document.querySelector("input[name='payMethod']:checked");
+  return el ? el.value : "TRANSFERENCIA";
+}
+
+function setPayPills(){
+  const v = getPayMethod();
+  document.getElementById("pillTransfer")?.classList.toggle("active", v === "TRANSFERENCIA");
+  document.getElementById("pillCash")?.classList.toggle("active", v === "EFECTIVO");
+}
+
 function toggleAddress(){
   const t = getDeliveryType();
   const box = document.getElementById("addressBox");
-  const pillRetiro = document.getElementById("pillRetiro");
-  const pillEnvio = document.getElementById("pillEnvio");
 
-  if(t === "ENVIO"){
-    box.classList.remove("hidden");
-    pillEnvio?.classList.add("active");
-    pillRetiro?.classList.remove("active");
-  }else{
-    box.classList.add("hidden");
-    pillRetiro?.classList.add("active");
-    pillEnvio?.classList.remove("active");
-  }
+  document.getElementById("pillRetiro")?.classList.toggle("active", t === "RETIRO");
+  document.getElementById("pillEnvio")?.classList.toggle("active", t === "ENVIO");
+
+  if(t === "ENVIO") box.classList.remove("hidden");
+  else box.classList.add("hidden");
+
   updateTotals();
 }
 
@@ -105,10 +112,42 @@ function getItemsFromUI(){
   return items;
 }
 
+function showSectionsByCart(items){
+  const deliverySection = document.getElementById("deliverySection");
+  const paymentSection  = document.getElementById("paymentSection");
+  const mobileSticky    = document.getElementById("mobileSticky");
+
+  const hasItems = items.length > 0;
+
+  deliverySection.classList.toggle("hidden", !hasItems);
+  paymentSection.classList.toggle("hidden", !hasItems);
+  mobileSticky.classList.toggle("hidden", !hasItems);
+}
+
+function updateSummaryChips(){
+  const chips = document.getElementById("summaryChips");
+  const items = getItemsFromUI();
+  if(items.length === 0){
+    chips.classList.add("hidden");
+    chips.innerHTML = "";
+    return;
+  }
+
+  const deliveryType = getDeliveryType() === "ENVIO" ? "Envio" : "Retiro";
+  const payMethod = getPayMethod() === "EFECTIVO" ? "Efectivo" : "Transferencia";
+
+  chips.innerHTML = `
+    <span class="chip">${deliveryType}</span>
+    <span class="chip">Pago: ${payMethod}</span>
+  `;
+  chips.classList.remove("hidden");
+}
+
 function updateTotals(){
   const items = getItemsFromUI();
-  let subtotal = 0;
+  showSectionsByCart(items);
 
+  let subtotal = 0;
   items.forEach(it => {
     const p = products.find(x => x.sku === it.sku);
     subtotal += (p.price * it.qty);
@@ -123,6 +162,8 @@ function updateTotals(){
 
   const sticky = document.getElementById("totalSticky");
   if(sticky) sticky.textContent = money(total);
+
+  updateSummaryChips();
 
   const err = document.getElementById("error");
   const errSticky = document.getElementById("errorSticky");
@@ -153,10 +194,13 @@ async function submitOrder(){
   const name = document.getElementById("customerName").value.trim();
   const email = document.getElementById("customerEmail").value.trim();
   const phone = document.getElementById("customerPhone").value.trim();
+
+  const items = getItemsFromUI();
   const deliveryType = getDeliveryType();
+  const payMethod = getPayMethod();
+
   const address = document.getElementById("address").value.trim();
   const notes = document.getElementById("notes").value.trim();
-  const items = getItemsFromUI();
 
   const err = document.getElementById("error");
   const errSticky = document.getElementById("errorSticky");
@@ -172,40 +216,58 @@ async function submitOrder(){
   };
 
   if(!name || !email || !phone) return showErr("Completa nombre, email y telefono.");
-  if(deliveryType === "ENVIO" && !address) return showErr("Para envio, la direccion es obligatoria.");
   if(items.length === 0) return showErr("Selecciona al menos 1 producto.");
+  if(deliveryType === "ENVIO" && !address) return showErr("Para envio, la direccion es obligatoria.");
 
-  err.classList.add("hidden"); errSticky.classList.add("hidden");
+  err.classList.add("hidden");
+  errSticky.classList.add("hidden");
 
-  const payload = { customer:{name,email,phone}, delivery:{type:deliveryType,address,notes}, items };
+  const payload = {
+    customer:{ name, email, phone },
+    delivery:{ type: deliveryType, address, notes },
+    payment:{ method: payMethod },
+    items
+  };
 
   const res = await fetch(`${API_BASE}?path=order`, {
     method:"POST",
     headers:{ "Content-Type":"text/plain;charset=utf-8" },
     body: JSON.stringify(payload)
   });
+
   const data = await res.json();
   if(!data.ok) return showErr(data.error || "Error al enviar pedido.");
 
   const orderId = data.data.orderId;
   const finalTotal = data.data.total;
 
-  success.textContent = `Pedido recibido (${orderId}). Total: ${money(finalTotal)}. Te vamos a enviar el link de pago.`;
+  success.textContent = `Pedido recibido (${orderId}). Total: ${money(finalTotal)}. Te vamos a enviar el link/datos de pago.`;
   success.classList.remove("hidden");
 
   if(YOUR_WHATSAPP_NUMBER && !YOUR_WHATSAPP_NUMBER.includes("X")){
-    const msg = encodeURIComponent(`Hola! Hice un pedido ${orderId}. Total ${money(finalTotal)}. Mi nombre: ${name}.`);
+    const msg = encodeURIComponent(
+      `Hola! Hice un pedido ${orderId}. Total ${money(finalTotal)}. Pago: ${payMethod}. Mi nombre: ${name}.`
+    );
     wa.href = `https://wa.me/${YOUR_WHATSAPP_NUMBER}?text=${msg}`;
     wa.classList.remove("hidden");
   }
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
+  // entrega
   document.querySelectorAll("input[name='deliveryType']").forEach(r => r.addEventListener("change", toggleAddress));
+
+  // pago
+  document.querySelectorAll("input[name='payMethod']").forEach(r => r.addEventListener("change", () => {
+    setPayPills();
+    updateSummaryChips();
+  }));
+
+  setPayPills();
+  toggleAddress();
+
   document.getElementById("submitBtn").addEventListener("click", submitOrder);
   document.getElementById("submitBtnSticky").addEventListener("click", submitOrder);
-
-  toggleAddress();
 
   try{
     await loadProducts();
