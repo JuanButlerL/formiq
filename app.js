@@ -1,5 +1,5 @@
 
-const API_BASE = "https://script.google.com/macros/s/AKfycbzAlbzKS2JfyC1ESSW71vzL7x8cE5sb1kd5Lqb0zmUvyfbRQm2Z-S4DK0FKPFKQ4hzz/exec";
+const API_BASE = "https://script.google.com/macros/s/AKfycbyuLxNlbcWA67pKWUCsQjbKLW6lK8pK3vX1S78a8Yg04_T8SVYNEAwxctttDOgNvncI/exec";
 // Bloquea re-envio rapido (anti doble click)
 const SUBMIT_LOCK_MS = 25 * 1000;
 
