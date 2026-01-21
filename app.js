@@ -46,21 +46,29 @@ function renderProducts(){
     const lowStock = p.stock <= 10;
     const card = document.createElement("div");
     card.className = "productCard";
+
+    const initial = (p.name || "B").trim().slice(0,1).toUpperCase();
+
     card.innerHTML = `
-      <div class="productInfo">
-        <div class="productName">${p.name}</div>
-        <div class="productMeta">
-          <span>${p.sku}</span>
-          <span class="price">${money(p.price)}</span>
-          <span class="${lowStock ? "stockLow":""}">Stock: ${p.stock}</span>
+      <div class="productLeft">
+        <div class="thumb">${initial}</div>
+        <div class="productInfo">
+          <div class="productName">${p.name}</div>
+          <div class="productMeta">
+            <span>${p.sku}</span>
+            <span class="price">${money(p.price)}</span>
+            <span class="${lowStock ? "stockLow":""}">Stock: ${p.stock}</span>
+          </div>
         </div>
       </div>
+
       <div class="stepper">
-        <button class="dec" data-sku="${p.sku}">−</button>
+        <button class="dec" data-sku="${p.sku}" aria-label="Disminuir">−</button>
         <input class="qty qtyBox" data-sku="${p.sku}" type="number" min="0" max="${p.stock}" value="0" inputmode="numeric" />
-        <button class="inc" data-sku="${p.sku}">+</button>
+        <button class="inc" data-sku="${p.sku}" aria-label="Aumentar">+</button>
       </div>
     `;
+
     box.appendChild(card);
   });
 
@@ -124,9 +132,8 @@ function showSectionsByCart(items){
   mobileSticky.classList.toggle("hidden", !hasItems);
 }
 
-function updateSummaryChips(){
+function updateSummaryChips(items){
   const chips = document.getElementById("summaryChips");
-  const items = getItemsFromUI();
   if(items.length === 0){
     chips.classList.add("hidden");
     chips.innerHTML = "";
@@ -141,6 +148,33 @@ function updateSummaryChips(){
     <span class="chip">Pago: ${payMethod}</span>
   `;
   chips.classList.remove("hidden");
+}
+
+function renderCartSummary(items){
+  const box = document.getElementById("cartList");
+  if(!box) return;
+
+  if(items.length === 0){
+    box.className = "cartEmpty";
+    box.textContent = "Tu carrito esta vacio. Elegi productos para continuar.";
+    return;
+  }
+
+  let html = `<div class="cartList">`;
+  items.forEach(it => {
+    const p = products.find(x => x.sku === it.sku);
+    const line = p.price * it.qty;
+    html += `
+      <div class="cartItem">
+        <div><strong>${p.name}</strong> x ${it.qty}</div>
+        <div><strong>${money(line)}</strong></div>
+      </div>
+    `;
+  });
+  html += `</div>`;
+
+  box.className = "";
+  box.innerHTML = html;
 }
 
 function updateTotals(){
@@ -163,7 +197,8 @@ function updateTotals(){
   const sticky = document.getElementById("totalSticky");
   if(sticky) sticky.textContent = money(total);
 
-  updateSummaryChips();
+  renderCartSummary(items);
+  updateSummaryChips(items);
 
   const err = document.getElementById("error");
   const errSticky = document.getElementById("errorSticky");
@@ -260,7 +295,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // pago
   document.querySelectorAll("input[name='payMethod']").forEach(r => r.addEventListener("change", () => {
     setPayPills();
-    updateSummaryChips();
+    updateTotals();
   }));
 
   setPayPills();
