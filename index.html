@@ -4,12 +4,14 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Pedidos de Barritas</title>
-  <link rel="stylesheet" href="./styles.css?v=2" />
+
+  <!-- Cache-busting: cambia el sufijo cada deploy -->
+  <link rel="stylesheet" href="./styles.css?v=20260121-1" />
 </head>
 <body>
   <main class="wrap">
     <header class="hero">
-      <div>
+      <div class="heroLeft">
         <h1>Pedidos de Barritas</h1>
         <div class="badge">Minimo de compra: <strong>$40.000</strong></div>
       </div>
@@ -37,7 +39,7 @@
         <section class="card">
           <div class="cardTitleRow">
             <h2>Productos</h2>
-            <div class="hint">Elegí cantidades. Stock visible.</div>
+            <div class="hint">Elegi cantidades. Stock visible.</div>
           </div>
           <div id="products" class="productsList"></div>
         </section>
@@ -71,6 +73,7 @@
         <!-- Pago: aparece cuando hay productos -->
         <section id="paymentSection" class="card hidden">
           <h2>Pago</h2>
+
           <div class="radioPill">
             <label class="pill active" id="pillTransfer">
               <input type="radio" name="payMethod" value="TRANSFERENCIA" checked> Transferencia
@@ -79,18 +82,19 @@
               <input type="radio" name="payMethod" value="EFECTIVO"> Efectivo
             </label>
           </div>
+
           <div class="hint" style="margin-top:10px">
             Te enviamos el detalle y el link/datos de pago luego de confirmar.
           </div>
         </section>
 
-        <!-- Sticky resumen mobile -->
+        <!-- Sticky mobile resumen -->
         <div id="mobileSticky" class="mobileSticky hidden">
           <div class="row">
             <div><strong>Total</strong></div>
             <div id="totalSticky"><strong>$0</strong></div>
           </div>
-          <button id="submitBtnSticky" class="btn">Confirmar pedido</button>
+          <button id="submitBtnSticky" class="btn" disabled>Confirmar pedido</button>
           <p id="errorSticky" class="error hidden"></p>
         </div>
       </div>
@@ -105,11 +109,17 @@
         <div class="summaryRow">
           <div>Envio</div><strong id="deliveryFee">$0</strong>
         </div>
+
         <div class="summaryTotal">
           <div>Total</div><div id="total">$0</div>
         </div>
 
         <div id="summaryChips" class="chips hidden"></div>
+
+        <!-- Carrito -->
+        <div id="cartList" class="cartEmpty">
+          Tu carrito esta vacio. Elegi productos para continuar.
+        </div>
 
         <p id="error" class="error hidden"></p>
         <p id="success" class="success hidden"></p>
@@ -119,7 +129,8 @@
       </aside>
     </div>
 
-    <script src="./app.js?v=2"></script>
+    <!-- Cache-busting: cambia el sufijo cada deploy -->
+    <script src="./app.js?v=20260121-1"></script>
   </main>
 </body>
 </html>
