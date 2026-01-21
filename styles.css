@@ -379,18 +379,26 @@ input:focus{
 
 .hidden{ display:none; }
 
+/* =========================
+   Responsive
+   ========================= */
+
 @media (max-width: 920px){
   .layout{ grid-template-columns: 1fr; }
   .hero{ align-items:flex-start; flex-direction:column; }
   .meta{ text-align:left; max-width:none; }
   /* Evita doble boton en mobile */
   #submitBtn{ display:none; }
+
+  /* Ajuste padding general en mobile */
+  .wrap{ padding: 12px; }
 }
 
 @media (max-width: 720px){
   .grid3{ grid-template-columns: 1fr; }
 }
 
+/* Productos apilados */
 @media (max-width: 520px){
   .productCard{
     flex-direction: column;
@@ -401,7 +409,47 @@ input:focus{
   }
 }
 
-/* Sticky mobile */
+/* =========================
+   Mobile fixes (no overlap)
+   ========================= */
+
+/* pills: que no se monten */
+@media (max-width: 520px){
+  .radioPill{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:10px;
+  }
+}
+@media (max-width: 360px){
+  .radioPill{ grid-template-columns: 1fr; }
+}
+
+/* Evita overflow por nombres largos en productos */
+@media (max-width: 520px){
+  .productInfo{ min-width:0; }
+  .productName{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .stepper{
+    display:grid;
+    grid-template-columns: 44px 1fr 44px;
+    gap:8px;
+    align-items:center;
+  }
+  .qtyBox{
+    width:100%;
+    max-width:none;
+    text-align:center;
+  }
+}
+
+/* =========================
+   Sticky mobile
+   ========================= */
+
 .mobileSticky{ display:none; }
 
 @media (max-width: 920px){
@@ -416,132 +464,9 @@ input:focus{
     backdrop-filter: blur(8px);
     padding: 12px;
     box-shadow: 0 -10px 30px rgba(17,24,39,.10);
-
-
-
-    /* =========================
-   Mobile fixes (no overlap)
-   ========================= */
-
-/* evita scroll horizontal por elementos que se pasan */
-html, body {
-  max-width: 100%;
-  overflow-x: hidden;
-}
-
-.wrap {
-  width: 100%;
-  max-width: 1100px; /* si ya tenes otro, esto no molesta */
-  margin: 0 auto;
-  padding: 12px;
-  box-sizing: border-box;
-}
-
-/* spacing consistente entre "cajitas" */
-.layout {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 14px;
-}
-
-/* cards con margen y padding mobile-friendly */
-.card {
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* grid de datos del cliente: 1 columna en mobile */
-.grid3 {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
-}
-
-/* evita que labels/inputs se encimen */
-label {
-  display: grid;
-  gap: 6px;
-}
-
-/* inputs al 100% */
-input, select, textarea, button {
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* pills: que no se monten, 1 o 2 por fila segun ancho */
-.radioPill {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-@media (max-width: 360px) {
-  .radioPill { grid-template-columns: 1fr; }
-}
-
-/* productos: que no rompan ancho */
-.productsList {
-  display: grid;
-  gap: 10px;
-}
-
-.productCard {
-  width: 100%;
-  box-sizing: border-box;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
-}
-
-/* parte izquierda del producto se apila bien */
-.productLeft {
-  display: grid;
-  grid-template-columns: 56px 1fr;
-  gap: 10px;
-  align-items: center;
-  min-width: 0;
-}
-
-.productInfo {
-  min-width: 0;
-}
-
-.productName {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* stepper: botones + input sin overflow */
-.stepper {
-  display: grid;
-  grid-template-columns: 44px 1fr 44px;
-  gap: 8px;
-  align-items: center;
-}
-
-.qtyBox {
-  text-align: center;
-}
-
-/* aside (resumen) debajo en mobile */
-@media (max-width: 900px) {
-  .layout {
-    grid-template-columns: 1fr;
+    z-index: 50;
   }
-}
 
-/* sticky: que no tape contenido */
-.mobileSticky {
-  position: sticky;
-  bottom: 10px;
-  z-index: 50;
-}
-
-/* si tu .hidden no es fuerte */
-.hidden { display: none !important; }
-
-  }
   .mobileSticky .row{ justify-content:space-between; }
   .mobileSticky .btn{ margin-top: 10px; }
 }
