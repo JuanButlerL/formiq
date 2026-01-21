@@ -1,11 +1,11 @@
-const API_BASE = "https://script.google.com/macros/s/AKfycbxSvyw7GSgfzLvm14aKFZIBkP8qk46sG5ptWM2-9wcwZidyj50ZQuM5-zxBNR1We1gC/exec";
-const MIN_TOTAL = 40000;
-const FRONT_DELIVERY_FEE = 0;
-
-// opcional: ponelo real para habilitar link
-const YOUR_WHATSAPP_NUMBER = "54911XXXXXXXX";
+const API_BASE = "https://script.google.com/macros/s/AKfycbzDOMCZ8fUWJS9IOTDwgfwVyZIya-CnIN7RNJewjAXa8fcvwjQc7RJVst_SoRnehYyr/exec";
 
 let products = [];
+let config = {
+  min_total: 40000,
+  delivery_fee: 0,
+  whatsapp_number: ""
+};
 
 function money(n){ return "$" + Number(n||0).toLocaleString("es-AR"); }
 
@@ -38,6 +38,10 @@ function toggleAddress(){
   updateTotals();
 }
 
+function safeInitial(name){
+  return String(name || "B").trim().slice(0,1).toUpperCase() || "B";
+}
+
 function renderProducts(){
   const box = document.getElementById("products");
   box.innerHTML = "";
@@ -47,11 +51,13 @@ function renderProducts(){
     const card = document.createElement("div");
     card.className = "productCard";
 
-    const initial = (p.name || "B").trim().slice(0,1).toUpperCase();
+    const leftMedia = p.image_url
+      ? `<img class="productImg" src="${p.image_url}" alt="${p.name}" loading="lazy" />`
+      : `<div class="thumb" aria-label="Producto">${safeInitial(p.name)}</div>`;
 
     card.innerHTML = `
       <div class="productLeft">
-        <div class="thumb">${initial}</div>
+        ${leftMedia}
         <div class="productInfo">
           <div class="productName">${p.name}</div>
           <div class="productMeta">
@@ -177,6 +183,12 @@ function renderCartSummary(items){
   box.innerHTML = html;
 }
 
+function updateMinBadge(){
+  const el = document.getElementById("minBadge");
+  if(!el) return;
+  el.innerHTML = `Minimo de compra: <strong>${money(config.min_total || 0)}</strong>`;
+}
+
 function updateTotals(){
   const items = getItemsFromUI();
   showSectionsByCart(items);
@@ -187,7 +199,7 @@ function updateTotals(){
     subtotal += (p.price * it.qty);
   });
 
-  const deliveryFee = getDeliveryType() === "ENVIO" ? FRONT_DELIVERY_FEE : 0;
+  const deliveryFee = (getDeliveryType() === "ENVIO") ? Number(config.delivery_fee || 0) : 0;
   const total = subtotal + deliveryFee;
 
   document.getElementById("subtotal").textContent = money(subtotal);
@@ -203,8 +215,10 @@ function updateTotals(){
   const err = document.getElementById("error");
   const errSticky = document.getElementById("errorSticky");
 
-  if(total > 0 && total < MIN_TOTAL){
-    const msg = `El minimo es ${money(MIN_TOTAL)}. Te faltan ${money(MIN_TOTAL - total)}.`;
+  const minTotal = Number(config.min_total || 0);
+
+  if(total > 0 && total < minTotal){
+    const msg = `El minimo es ${money(minTotal)}. Te faltan ${money(minTotal - total)}.`;
     err.textContent = msg; err.classList.remove("hidden");
     errSticky.textContent = msg; errSticky.classList.remove("hidden");
   }else{
@@ -212,16 +226,21 @@ function updateTotals(){
     errSticky.classList.add("hidden");
   }
 
-  const canSubmit = total >= MIN_TOTAL && items.length > 0;
+  const canSubmit = total >= minTotal && items.length > 0;
   document.getElementById("submitBtn").disabled = !canSubmit;
   document.getElementById("submitBtnSticky").disabled = !canSubmit;
 }
 
-async function loadProducts(){
-  const res = await fetch(`${API_BASE}?path=products`);
-  const data = await res.json();
-  if(!data.ok) throw new Error(data.error || "No products");
-  products = data.data || [];
+async function loadBootstrap(){
+  const res = await fetch(`${API_BASE}?path=bootstrap`);
+  const json = await res.json();
+  if(!json.ok) throw new Error(json.error || "bootstrap error");
+
+  const data = json.data || {};
+  config = Object.assign(config, data.config || {});
+  products = (data.products || []);
+
+  updateMinBadge();
   renderProducts();
 }
 
@@ -270,29 +289,27 @@ async function submitOrder(){
     body: JSON.stringify(payload)
   });
 
-  const data = await res.json();
-  if(!data.ok) return showErr(data.error || "Error al enviar pedido.");
+  const json = await res.json();
+  if(!json.ok) return showErr(json.error || "Error al enviar pedido.");
 
-  const orderId = data.data.orderId;
-  const finalTotal = data.data.total;
+  const orderId = json.data.orderId;
+  const finalTotal = json.data.total;
 
   success.textContent = `Pedido recibido (${orderId}). Total: ${money(finalTotal)}. Te vamos a enviar el link/datos de pago.`;
   success.classList.remove("hidden");
 
-  if(YOUR_WHATSAPP_NUMBER && !YOUR_WHATSAPP_NUMBER.includes("X")){
+  const waNumber = String(config.whatsapp_number || "").trim();
+  if(waNumber){
     const msg = encodeURIComponent(
       `Hola! Hice un pedido ${orderId}. Total ${money(finalTotal)}. Pago: ${payMethod}. Mi nombre: ${name}.`
     );
-    wa.href = `https://wa.me/${YOUR_WHATSAPP_NUMBER}?text=${msg}`;
+    wa.href = `https://wa.me/${waNumber}?text=${msg}`;
     wa.classList.remove("hidden");
   }
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-  // entrega
   document.querySelectorAll("input[name='deliveryType']").forEach(r => r.addEventListener("change", toggleAddress));
-
-  // pago
   document.querySelectorAll("input[name='payMethod']").forEach(r => r.addEventListener("change", () => {
     setPayPills();
     updateTotals();
@@ -305,10 +322,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("submitBtnSticky").addEventListener("click", submitOrder);
 
   try{
-    await loadProducts();
+    await loadBootstrap();
   }catch(e){
     const err = document.getElementById("error");
-    err.textContent = "No se pudieron cargar productos (backend).";
+    err.textContent = "No se pudieron cargar productos/config (backend).";
     err.classList.remove("hidden");
     console.error(e);
   }
