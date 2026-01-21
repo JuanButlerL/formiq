@@ -1,11 +1,19 @@
 const API_BASE = "https://script.google.com/macros/s/AKfycbzAlbzKS2JfyC1ESSW71vzL7x8cE5sb1kd5Lqb0zmUvyfbRQm2Z-S4DK0FKPFKQ4hzz/exec";
 
+// A donde redirige tras enviar (evita re-envios)
+const THANK_YOU_URL = "./gracias.html";
+const REDIRECT_MS = 1200;
+
+// Bloquea re-envio rapido (anti doble click / ansiedad)
+const SUBMIT_LOCK_MS = 25 * 1000;
+
 let products = [];
 let config = {
   min_total: 40000,
-  delivery_fee: 0,
-  whatsapp_number: ""
+  delivery_fee: 0
 };
+
+let isSubmitting = false;
 
 function money(n){ return "$" + Number(n||0).toLocaleString("es-AR"); }
 
@@ -41,7 +49,6 @@ function renderProducts(){
   box.innerHTML = "";
 
   products.forEach(p => {
-    const lowStock = p.stock <= 10;
     const card = document.createElement("div");
     card.className = "productCard";
 
@@ -57,14 +64,13 @@ function renderProducts(){
           <div class="productMeta">
             <span>${p.sku}</span>
             <span class="price">${money(p.price)}</span>
-            <span class="${lowStock ? "stockLow":""}">Stock: ${p.stock}</span>
           </div>
         </div>
       </div>
 
       <div class="stepper">
         <button class="dec" data-sku="${p.sku}" aria-label="Disminuir">−</button>
-        <input class="qty qtyBox" data-sku="${p.sku}" type="number" min="0" max="${p.stock}" value="0" inputmode="numeric" />
+        <input class="qty qtyBox" data-sku="${p.sku}" type="number" min="0" max="999" value="0" inputmode="numeric" />
         <button class="inc" data-sku="${p.sku}" aria-label="Aumentar">+</button>
       </div>
     `;
@@ -81,9 +87,8 @@ function renderProducts(){
     btn.addEventListener("click", () => {
       const sku = btn.dataset.sku;
       const inp = document.querySelector(`.qty[data-sku="${sku}"]`);
-      const p = products.find(x => x.sku === sku);
       const v = Number(inp.value || 0);
-      if(p && v < p.stock) inp.value = String(v + 1);
+      inp.value = String(v + 1);
       updateTotals();
     });
   });
@@ -107,14 +112,13 @@ function getItemsFromUI(){
     const sku = inp.dataset.sku;
     let qty = Number(inp.value || 0);
     if(qty < 0) qty = 0;
+    if(qty > 999) qty = 999;
 
     const p = products.find(x => x.sku === sku);
     if(!p) return;
 
-    if(qty > p.stock){
-      qty = p.stock;
-      inp.value = String(qty);
-    }
+    // NOTE: stock oculto; el backend igual valida stock si lo tenes cargado.
+    // Si queres desactivar validacion de stock backend, avisame y lo sacamos.
     if(qty > 0) items.push({ sku, qty });
   });
   return items;
@@ -140,7 +144,7 @@ function updateSummaryChips(items){
     return;
   }
 
-  const deliveryType = getDeliveryType() === "ENVIO" ? "Envio" : "Retiro";
+  const deliveryType = getDeliveryType() === "ENVIO" ? "Entrega" : "Retiro";
   const payMethod = getPayMethod() === "EFECTIVO" ? "Efectivo" : "Transferencia";
 
   chips.innerHTML = `
@@ -193,11 +197,10 @@ function updateTotals(){
     subtotal += (p.price * it.qty);
   });
 
-  const deliveryFee = (getDeliveryType() === "ENVIO") ? Number(config.delivery_fee || 0) : 0;
-  const total = subtotal + deliveryFee;
+  // Por ahora: NO manejamos envio -> siempre 0
+  const total = subtotal;
 
   document.getElementById("subtotal").textContent = money(subtotal);
-  document.getElementById("deliveryFee").textContent = money(deliveryFee);
   document.getElementById("total").textContent = money(total);
 
   const sticky = document.getElementById("totalSticky");
@@ -220,7 +223,7 @@ function updateTotals(){
     errSticky.classList.add("hidden");
   }
 
-  const canSubmit = total >= minTotal && items.length > 0;
+  const canSubmit = total >= minTotal && items.length > 0 && !isSubmitting;
   document.getElementById("submitBtn").disabled = !canSubmit;
   document.getElementById("submitBtnSticky").disabled = !canSubmit;
 }
@@ -238,7 +241,35 @@ async function loadBootstrap(){
   renderProducts();
 }
 
+function submitLocked_(){
+  const last = Number(localStorage.getItem("last_submit_ts") || "0");
+  return (Date.now() - last) < SUBMIT_LOCK_MS;
+}
+
+function lockSubmit_(){
+  localStorage.setItem("last_submit_ts", String(Date.now()));
+}
+
+function openThankModal(orderId, total){
+  const modal = document.getElementById("thankModal");
+  const txt = document.getElementById("thankText");
+  txt.innerHTML = `Recibimos tu pedido <strong>${orderId}</strong> por <strong>${money(total)}</strong>.<br/>En breve te contactamos para coordinar el pago y la entrega.`;
+  modal.classList.remove("hidden");
+}
+
 async function submitOrder(){
+  if(isSubmitting) return;
+  if(submitLocked_()){
+    // evita spam
+    const err = document.getElementById("error");
+    err.textContent = "Pedido ya enviado. Espera unos segundos.";
+    err.classList.remove("hidden");
+    return;
+  }
+
+  isSubmitting = true;
+  updateTotals();
+
   const name = document.getElementById("customerName").value.trim();
   const email = document.getElementById("customerEmail").value.trim();
   const phone = document.getElementById("customerPhone").value.trim();
@@ -252,20 +283,17 @@ async function submitOrder(){
 
   const err = document.getElementById("error");
   const errSticky = document.getElementById("errorSticky");
-  const success = document.getElementById("success");
-  const wa = document.getElementById("waLink");
-
-  success.classList.add("hidden");
-  wa.classList.add("hidden");
 
   const showErr = (m) => {
     err.textContent = m; err.classList.remove("hidden");
     errSticky.textContent = m; errSticky.classList.remove("hidden");
+    isSubmitting = false;
+    updateTotals();
   };
 
   if(!name || !email || !phone) return showErr("Completa nombre, email y telefono.");
   if(items.length === 0) return showErr("Selecciona al menos 1 producto.");
-  if(!postalCode) return showErr("El codigo postal es obligatorio (retira o envio).");
+  if(!postalCode) return showErr("El codigo postal es obligatorio.");
 
   err.classList.add("hidden");
   errSticky.classList.add("hidden");
@@ -277,28 +305,34 @@ async function submitOrder(){
     items
   };
 
-  const res = await fetch(`${API_BASE}?path=order`, {
-    method:"POST",
-    headers:{ "Content-Type":"text/plain;charset=utf-8" },
-    body: JSON.stringify(payload)
-  });
+  try{
+    const res = await fetch(`${API_BASE}?path=order`, {
+      method:"POST",
+      headers:{ "Content-Type":"text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
+    });
 
-  const json = await res.json();
-  if(!json.ok) return showErr(json.error || "Error al enviar pedido.");
+    const json = await res.json();
+    if(!json.ok) return showErr(json.error || "Error al enviar pedido.");
 
-  const orderId = json.data.orderId;
-  const finalTotal = json.data.total;
+    lockSubmit_();
 
-  success.textContent = `Pedido recibido (${orderId}). Total: ${money(finalTotal)}. Te vamos a enviar el link/datos de pago.`;
-  success.classList.remove("hidden");
+    const orderId = json.data.orderId;
+    const finalTotal = json.data.total;
 
-  const waNumber = String(config.whatsapp_number || "").trim();
-  if(waNumber){
-    const msg = encodeURIComponent(
-      `Hola! Hice un pedido ${orderId}. Total ${money(finalTotal)}. Pago: ${payMethod}. CP: ${postalCode}. Mi nombre: ${name}.`
-    );
-    wa.href = `https://wa.me/${waNumber}?text=${msg}`;
-    wa.classList.remove("hidden");
+    // Modal + redirect
+    openThankModal(orderId, finalTotal);
+
+    // Deshabilita botones para evitar doble submit
+    document.getElementById("submitBtn").disabled = true;
+    document.getElementById("submitBtnSticky").disabled = true;
+
+    setTimeout(() => {
+      window.location.href = THANK_YOU_URL;
+    }, REDIRECT_MS);
+
+  }catch(e){
+    return showErr("No se pudo enviar el pedido. Intenta de nuevo.");
   }
 }
 
