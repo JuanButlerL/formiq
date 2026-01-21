@@ -25,16 +25,10 @@ function setPayPills(){
   document.getElementById("pillCash")?.classList.toggle("active", v === "EFECTIVO");
 }
 
-function toggleAddress(){
+function toggleDeliveryPills(){
   const t = getDeliveryType();
-  const box = document.getElementById("addressBox");
-
   document.getElementById("pillRetiro")?.classList.toggle("active", t === "RETIRO");
   document.getElementById("pillEnvio")?.classList.toggle("active", t === "ENVIO");
-
-  if(t === "ENVIO") box.classList.remove("hidden");
-  else box.classList.add("hidden");
-
   updateTotals();
 }
 
@@ -253,7 +247,7 @@ async function submitOrder(){
   const deliveryType = getDeliveryType();
   const payMethod = getPayMethod();
 
-  const address = document.getElementById("address").value.trim();
+  const postalCode = document.getElementById("postalCode") ? document.getElementById("postalCode").value.trim() : "";
   const notes = document.getElementById("notes").value.trim();
 
   const err = document.getElementById("error");
@@ -271,14 +265,14 @@ async function submitOrder(){
 
   if(!name || !email || !phone) return showErr("Completa nombre, email y telefono.");
   if(items.length === 0) return showErr("Selecciona al menos 1 producto.");
-  if(deliveryType === "ENVIO" && !address) return showErr("Para envio, la direccion es obligatoria.");
+  if(!postalCode) return showErr("El codigo postal es obligatorio (retira o envio).");
 
   err.classList.add("hidden");
   errSticky.classList.add("hidden");
 
   const payload = {
     customer:{ name, email, phone },
-    delivery:{ type: deliveryType, address, notes },
+    delivery:{ type: deliveryType, postal_code: postalCode, notes },
     payment:{ method: payMethod },
     items
   };
@@ -301,7 +295,7 @@ async function submitOrder(){
   const waNumber = String(config.whatsapp_number || "").trim();
   if(waNumber){
     const msg = encodeURIComponent(
-      `Hola! Hice un pedido ${orderId}. Total ${money(finalTotal)}. Pago: ${payMethod}. Mi nombre: ${name}.`
+      `Hola! Hice un pedido ${orderId}. Total ${money(finalTotal)}. Pago: ${payMethod}. CP: ${postalCode}. Mi nombre: ${name}.`
     );
     wa.href = `https://wa.me/${waNumber}?text=${msg}`;
     wa.classList.remove("hidden");
@@ -309,14 +303,14 @@ async function submitOrder(){
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-  document.querySelectorAll("input[name='deliveryType']").forEach(r => r.addEventListener("change", toggleAddress));
+  document.querySelectorAll("input[name='deliveryType']").forEach(r => r.addEventListener("change", toggleDeliveryPills));
   document.querySelectorAll("input[name='payMethod']").forEach(r => r.addEventListener("change", () => {
     setPayPills();
     updateTotals();
   }));
 
   setPayPills();
-  toggleAddress();
+  toggleDeliveryPills();
 
   document.getElementById("submitBtn").addEventListener("click", submitOrder);
   document.getElementById("submitBtnSticky").addEventListener("click", submitOrder);
