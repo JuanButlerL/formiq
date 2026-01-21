@@ -254,8 +254,10 @@ function openThankModal(orderId, total){
   const modal = document.getElementById("thankModal");
   const txt = document.getElementById("thankText");
   txt.innerHTML = `Recibimos tu pedido <strong>${orderId}</strong> por <strong>${money(total)}</strong>.<br/>En breve te contactamos para coordinar el pago y la entrega.`;
-  modal.classList.remove("hidden");
+
+  modal.style.display = "flex"; // <-- aca recien lo mostramos
 }
+
 
 async function submitOrder(){
   if(isSubmitting) return;
