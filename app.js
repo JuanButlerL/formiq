@@ -1,10 +1,6 @@
+
 const API_BASE = "https://script.google.com/macros/s/AKfycbzAlbzKS2JfyC1ESSW71vzL7x8cE5sb1kd5Lqb0zmUvyfbRQm2Z-S4DK0FKPFKQ4hzz/exec";
-
-// A donde redirige tras enviar (evita re-envios)
-const THANK_YOU_URL = "./gracias.html";
-const REDIRECT_MS = 1200;
-
-// Bloquea re-envio rapido (anti doble click / ansiedad)
+// Bloquea re-envio rapido (anti doble click)
 const SUBMIT_LOCK_MS = 25 * 1000;
 
 let products = [];
@@ -117,8 +113,6 @@ function getItemsFromUI(){
     const p = products.find(x => x.sku === sku);
     if(!p) return;
 
-    // NOTE: stock oculto; el backend igual valida stock si lo tenes cargado.
-    // Si queres desactivar validacion de stock backend, avisame y lo sacamos.
     if(qty > 0) items.push({ sku, qty });
   });
   return items;
@@ -197,7 +191,6 @@ function updateTotals(){
     subtotal += (p.price * it.qty);
   });
 
-  // Por ahora: NO manejamos envio -> siempre 0
   const total = subtotal;
 
   document.getElementById("subtotal").textContent = money(subtotal);
@@ -253,19 +246,35 @@ function lockSubmit_(){
 function openThankModal(orderId, total){
   const modal = document.getElementById("thankModal");
   const txt = document.getElementById("thankText");
-  txt.innerHTML = `Recibimos tu pedido <strong>${orderId}</strong> por <strong>${money(total)}</strong>.<br/>En breve te contactamos para coordinar el pago y la entrega.`;
 
-  modal.style.display = "flex"; // <-- aca recien lo mostramos
+  txt.innerHTML = `Recibimos tu pedido <strong>${orderId}</strong> por <strong>${money(total)}</strong>.<br/>En breve te contactamos para coordinar el pago y la entrega.`;
+  modal.style.display = "flex";
 }
 
+function closeThankModal(){
+  const modal = document.getElementById("thankModal");
+  modal.style.display = "none";
+}
+
+function markPostalError_(on){
+  const cp = document.getElementById("postalCode");
+  if(!cp) return;
+  cp.style.borderColor = on ? "rgba(176,0,32,.6)" : "";
+  cp.style.boxShadow = on ? "0 0 0 4px rgba(176,0,32,.12)" : "";
+}
 
 async function submitOrder(){
   if(isSubmitting) return;
+
+  const err = document.getElementById("error");
+  const errSticky = document.getElementById("errorSticky");
+  const showErr = (m) => {
+    err.textContent = m; err.classList.remove("hidden");
+    errSticky.textContent = m; errSticky.classList.remove("hidden");
+  };
+
   if(submitLocked_()){
-    // evita spam
-    const err = document.getElementById("error");
-    err.textContent = "Pedido ya enviado. Espera unos segundos.";
-    err.classList.remove("hidden");
+    showErr("Pedido ya enviado. Espera unos segundos.");
     return;
   }
 
@@ -283,19 +292,29 @@ async function submitOrder(){
   const postalCode = document.getElementById("postalCode") ? document.getElementById("postalCode").value.trim() : "";
   const notes = document.getElementById("notes").value.trim();
 
-  const err = document.getElementById("error");
-  const errSticky = document.getElementById("errorSticky");
+  // limpia errores visuales
+  markPostalError_(false);
 
-  const showErr = (m) => {
-    err.textContent = m; err.classList.remove("hidden");
-    errSticky.textContent = m; errSticky.classList.remove("hidden");
-    isSubmitting = false;
-    updateTotals();
-  };
-
-  if(!name || !email || !phone) return showErr("Completa nombre, email y telefono.");
-  if(items.length === 0) return showErr("Selecciona al menos 1 producto.");
-  if(!postalCode) return showErr("El codigo postal es obligatorio.");
+  if(!name || !email || !phone){
+    isSubmitting = false; updateTotals();
+    showErr("Completa nombre, email y telefono.");
+    return;
+  }
+  if(items.length === 0){
+    isSubmitting = false; updateTotals();
+    showErr("Selecciona al menos 1 producto.");
+    return;
+  }
+  if(!postalCode){
+    // ACA estaba tu problema: no avisaba claramente
+    isSubmitting = false; updateTotals();
+    markPostalError_(true);
+    showErr("El codigo postal es obligatorio.");
+    // si esta visible, lo enfocamos
+    document.getElementById("deliverySection")?.scrollIntoView({ behavior:"smooth", block:"start" });
+    document.getElementById("postalCode")?.focus();
+    return;
+  }
 
   err.classList.add("hidden");
   errSticky.classList.add("hidden");
@@ -315,26 +334,27 @@ async function submitOrder(){
     });
 
     const json = await res.json();
-    if(!json.ok) return showErr(json.error || "Error al enviar pedido.");
+    if(!json.ok){
+      isSubmitting = false; updateTotals();
+      showErr(json.error || "Error al enviar pedido.");
+      return;
+    }
 
     lockSubmit_();
 
     const orderId = json.data.orderId;
     const finalTotal = json.data.total;
 
-    // Modal + redirect
+    // Solo modal, sin redirect
     openThankModal(orderId, finalTotal);
 
-    // Deshabilita botones para evitar doble submit
+    // deshabilita botones para evitar doble envio
     document.getElementById("submitBtn").disabled = true;
     document.getElementById("submitBtnSticky").disabled = true;
 
-    setTimeout(() => {
-      window.location.href = THANK_YOU_URL;
-    }, REDIRECT_MS);
-
   }catch(e){
-    return showErr("No se pudo enviar el pedido. Intenta de nuevo.");
+    isSubmitting = false; updateTotals();
+    showErr("No se pudo enviar el pedido. Intenta de nuevo.");
   }
 }
 
@@ -344,6 +364,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     setPayPills();
     updateTotals();
   }));
+
+  // cerrar modal
+  document.getElementById("thankClose")?.addEventListener("click", () => {
+    closeThankModal();
+  });
+
+  // si edita CP, limpia error visual
+  document.getElementById("postalCode")?.addEventListener("input", () => markPostalError_(false));
 
   setPayPills();
   toggleDeliveryPills();
