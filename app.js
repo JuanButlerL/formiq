@@ -1,4 +1,4 @@
-const API_BASE = "https://script.google.com/macros/s/AKfycbzDOMCZ8fUWJS9IOTDwgfwVyZIya-CnIN7RNJewjAXa8fcvwjQc7RJVst_SoRnehYyr/exec";
+const API_BASE = "https://script.google.com/macros/s/AKfycbzAlbzKS2JfyC1ESSW71vzL7x8cE5sb1kd5Lqb0zmUvyfbRQm2Z-S4DK0FKPFKQ4hzz/exec";
 
 let products = [];
 let config = {
