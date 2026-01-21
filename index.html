@@ -5,8 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Pedidos de Barritas</title>
 
-  <!-- Cambia el sufijo cuando deployas -->
-  <link rel="stylesheet" href="./styles.css?v=20260121-4" />
+  <link rel="stylesheet" href="./styles.css?v=20260121-5" />
 </head>
 <body>
   <main class="wrap">
@@ -22,7 +21,7 @@
         </div>
       </div>
 
-      <div class="meta">Recibis confirmacion y coordinamos pago y envio.</div>
+      <div class="meta">Recibis confirmacion y coordinamos pago y entrega.</div>
     </header>
 
     <div class="layout">
@@ -46,7 +45,7 @@
         <section class="card">
           <div class="cardTitleRow">
             <h2>Productos</h2>
-            <div class="hint">Elegi cantidades. Stock visible.</div>
+            <div class="hint">Elegi cantidades.</div>
           </div>
           <div id="products" class="productsList"></div>
         </section>
@@ -96,7 +95,7 @@
           </div>
         </section>
 
-        <!-- Sticky mobile: UNICO boton en mobile -->
+        <!-- Sticky mobile: unico boton en mobile -->
         <div id="mobileSticky" class="mobileSticky hidden">
           <div class="row">
             <div><strong>Total</strong></div>
@@ -114,9 +113,6 @@
         <div class="summaryRow">
           <div>Subtotal</div><strong id="subtotal">$0</strong>
         </div>
-        <div class="summaryRow">
-          <div>Envio</div><strong id="deliveryFee">$0</strong>
-        </div>
 
         <div class="summaryTotal">
           <div>Total</div><div id="total">$0</div>
@@ -129,15 +125,32 @@
         </div>
 
         <p id="error" class="error hidden"></p>
-        <p id="success" class="success hidden"></p>
 
         <!-- Este boton se oculta en mobile por CSS -->
         <button id="submitBtn" class="btn" disabled>Confirmar pedido</button>
-        <a id="waLink" class="wa hidden" target="_blank" rel="noreferrer">Enviar confirmacion por WhatsApp</a>
       </aside>
     </div>
 
-    <script src="./app.js?v=20260121-4"></script>
+    <!-- Modal Gracias -->
+    <div id="thankModal" class="hidden" style="
+      position:fixed; inset:0; background:rgba(17,24,39,.55);
+      display:flex; align-items:center; justify-content:center; padding:18px; z-index:9999;">
+      <div style="
+        width:min(520px, 100%); background:#fff; border-radius:18px; border:1px solid #e5e7eb;
+        box-shadow: 0 20px 60px rgba(0,0,0,.25); padding:16px;">
+        <h2 style="margin:0 0 8px; font-size:18px;">Gracias por tu compra</h2>
+        <div id="thankText" style="color:#6b7280; font-size:14px; line-height:1.4;">
+          Recibimos tu pedido. En breve te contactamos para coordinar el pago y la entrega.
+        </div>
+        <div style="display:flex; gap:10px; margin-top:14px;">
+          <a href="./gracias.html" class="btn" style="text-decoration:none; display:inline-flex; justify-content:center;">
+            Continuar
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <script src="./app.js?v=20260121-5"></script>
   </main>
 </body>
 </html>
