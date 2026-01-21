@@ -1,10 +1,9 @@
 /***********************
- * Pedidos Barritas - Frontend
- * - GitHub Pages (static)
- * - Backend: Apps Script Web App
+ * Pedidos Barritas - Frontend (GitHub Pages)
+ * Backend: Apps Script Web App
  ***********************/
 
-const API_BASE = "PEGAR_URL_DEL_WEB_APP"; // ej: https://script.google.com/macros/s/XXX/exec
+const API_BASE = "https://script.google.com/macros/s/AKfycbxSvyw7GSgfzLvm14aKFZIBkP8qk46sG5ptWM2-9wcwZidyj50ZQuM5-zxBNR1We1gC/exec";
 const MIN_TOTAL = 40000;
 
 // Si queres un envio fijo en el frontend (el backend igual recalcula)
@@ -38,18 +37,18 @@ function renderProducts() {
 
     card.innerHTML = `
       <div class="productInfo">
-        <div class="productName">${p.name}</div>
+        <div class="productName">${escapeHtml_(p.name)}</div>
         <div class="productMeta">
-          <span>${p.sku}</span>
+          <span>${escapeHtml_(p.sku)}</span>
           <span class="price">${money(p.price)}</span>
           <span class="${lowStock ? "stockLow" : ""}">Stock: ${p.stock}</span>
         </div>
       </div>
 
       <div class="stepper">
-        <button class="dec" data-sku="${p.sku}" aria-label="Disminuir">−</button>
-        <input class="qty qtyBox" data-sku="${p.sku}" type="number" min="0" max="${p.stock}" value="0" inputmode="numeric" />
-        <button class="inc" data-sku="${p.sku}" aria-label="Aumentar">+</button>
+        <button class="dec" data-sku="${escapeAttr_(p.sku)}" aria-label="Disminuir">−</button>
+        <input class="qty qtyBox" data-sku="${escapeAttr_(p.sku)}" type="number" min="0" max="${p.stock}" value="0" inputmode="numeric" />
+        <button class="inc" data-sku="${escapeAttr_(p.sku)}" aria-label="Aumentar">+</button>
       </div>
     `;
 
@@ -66,10 +65,10 @@ function renderProducts() {
   document.querySelectorAll(".inc").forEach((btn) => {
     btn.addEventListener("click", () => {
       const sku = btn.getAttribute("data-sku");
-      const inp = document.querySelector(`.qty[data-sku="${sku}"]`);
+      const inp = document.querySelector(`.qty[data-sku="${cssEscape_(sku)}"]`);
       const p = products.find((x) => x.sku === sku);
       let v = Number(inp.value || 0);
-      if (v < p.stock) inp.value = String(v + 1);
+      if (p && v < p.stock) inp.value = String(v + 1);
       updateTotals();
     });
   });
@@ -78,7 +77,7 @@ function renderProducts() {
   document.querySelectorAll(".dec").forEach((btn) => {
     btn.addEventListener("click", () => {
       const sku = btn.getAttribute("data-sku");
-      const inp = document.querySelector(`.qty[data-sku="${sku}"]`);
+      const inp = document.querySelector(`.qty[data-sku="${cssEscape_(sku)}"]`);
       let v = Number(inp.value || 0);
       if (v > 0) inp.value = String(v - 1);
       updateTotals();
@@ -193,7 +192,7 @@ async function loadProducts() {
   const res = await fetch(url);
   const data = await res.json();
   if (!data.ok) throw new Error(data.error || "Failed to load products");
-  products = data.data;
+  products = data.data || [];
   renderProducts();
 }
 
@@ -316,9 +315,28 @@ document.addEventListener("DOMContentLoaded", async () => {
   } catch (e) {
     const err = document.getElementById("error");
     if (err) {
-      err.textContent = "No se pudieron cargar productos. Revisa la URL del backend (API_BASE).";
+      err.textContent = "No se pudieron cargar productos. Revisa el backend (API_BASE).";
       err.classList.remove("hidden");
     }
     console.error(e);
   }
 });
+
+/************ Safe helpers ************/
+function escapeHtml_(s) {
+  return String(s || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+function escapeAttr_(s) {
+  // atributos entre comillas
+  return escapeHtml_(s).replaceAll("`", "&#096;");
+}
+function cssEscape_(s) {
+  // para usar en querySelector con data-sku
+  // simple: escapa comillas y backslash
+  return String(s || "").replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}
