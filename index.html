@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Pedidos de Barritas</title>
 
-  <link rel="stylesheet" href="./styles.css?v=20260121-5" />
+  <link rel="stylesheet" href="./styles.css?v=20260121-6" />
 </head>
 <body>
   <main class="wrap">
@@ -131,28 +131,25 @@
       </aside>
     </div>
 
-<!-- Modal Gracias -->
-<div id="thankModal" style="
-  display:none;
-  position:fixed; inset:0; background:rgba(17,24,39,.55);
-  align-items:center; justify-content:center; padding:18px; z-index:9999;">
-  <div style="
-    width:min(520px, 100%); background:#fff; border-radius:18px; border:1px solid #e5e7eb;
-    box-shadow: 0 20px 60px rgba(0,0,0,.25); padding:16px;">
-    <h2 style="margin:0 0 8px; font-size:18px;">Gracias por tu compra</h2>
-    <div id="thankText" style="color:#6b7280; font-size:14px; line-height:1.4;">
-      Recibimos tu pedido. En breve te contactamos para coordinar el pago y la entrega.
+    <!-- Modal Gracias (sin redireccion) -->
+    <div id="thankModal" style="
+      display:none;
+      position:fixed; inset:0; background:rgba(17,24,39,.55);
+      align-items:center; justify-content:center; padding:18px; z-index:9999;">
+      <div style="
+        width:min(520px, 100%); background:#fff; border-radius:18px; border:1px solid #e5e7eb;
+        box-shadow: 0 20px 60px rgba(0,0,0,.25); padding:16px;">
+        <h2 style="margin:0 0 8px; font-size:18px;">Gracias por tu compra</h2>
+        <div id="thankText" style="color:#6b7280; font-size:14px; line-height:1.4;">
+          Recibimos tu pedido. En breve te contactamos para coordinar el pago y la entrega.
+        </div>
+        <div style="display:flex; gap:10px; margin-top:14px;">
+          <button id="thankClose" class="btn" style="width:100%;">Listo</button>
+        </div>
+      </div>
     </div>
-    <div style="display:flex; gap:10px; margin-top:14px;">
-      <a href="./gracias.html" class="btn" style="text-decoration:none; display:inline-flex; justify-content:center;">
-        Continuar
-      </a>
-    </div>
-  </div>
-</div>
 
-
-    <script src="./app.js?v=20260121-5"></script>
+    <script src="./app.js?v=20260121-6"></script>
   </main>
 </body>
 </html>
